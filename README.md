@@ -8,3 +8,7 @@ Minimum server requirements
 4. php-soap extension active
 5. php-curl extension active
 6. php8.x-bcmath extension active
+
+**To install to your server, go to plationline folder and compress the contents to an archive named plationline.ocmod.zip**
+
+**Don't zip plationline folder, just the contents**
