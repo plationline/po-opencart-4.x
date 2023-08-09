@@ -1,0 +1,260 @@
+{{ header }}{{ column_left }}
+<div id="content">
+    <div class="page-header">
+        <div class="container-fluid">
+            <div class="float-end">
+                <button type="submit" form="form-payment" data-bs-toggle="tooltip" title="{{ button_save }}"
+                        class="btn btn-primary"><i class="fa-solid fa-save"></i></button>
+                <a href="{{ back }}" data-bs-toggle="tooltip" title="{{ button_back }}" class="btn btn-light"><i
+                            class="fa-solid fa-reply"></i></a></div>
+            <h1>{{ heading_title }}</h1>
+            <ol class="breadcrumb">
+                {% for breadcrumb in breadcrumbs %}
+                    <li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+                {% endfor %}
+            </ol>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="alert alert-info"><i class="fa-solid fa-circle-exclamation"></i> {{ text_fill_required_info }}</div>
+        <div class="card">
+            <div class="card-header"><i class="fa-solid fa-pencil"></i> {{ heading_title }} -
+                <small>{{ text_PO_version }}</small></div>
+            <div class="card-body">
+                <form id="form-payment" action="{{ save }}" method="post" data-oc-toggle="ajax">
+                    <fieldset>
+                        {% for language in languages %}
+                            <div class="row mb-3 required">
+                                <label for="input-title{{ language.language_id }}" class="col-sm-2 col-form-label">{{ entry_title }}</label>
+                                <div class="col-sm-10">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><img src="{{ language.image }}" title="{{ language.name }}"/></span> <textarea name="payment_plationline_title_{{ language.language_id }}" cols="80" rows="1" id="input-title-{{ language.language_id }}" class="form-control">{{ payment_plationline_title[language.language_id] ? payment_plationline_title[language.language_id] : entry_title_default }}</textarea>
+                                    </div>
+                                    <div id="error-title-{{ language.language_id }}" class="invalid-feedback"></div>
+                                </div>
+                            </div>
+                        {% endfor %}
+
+                        {% for language in languages %}
+                            <div class="row mb-3 required">
+                                <label for="input-description{{ language.language_id }}" class="col-sm-2 col-form-label">{{ entry_description }}</label>
+                                <div class="col-sm-10">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><img src="{{ language.image }}" title="{{ language.name }}"/></span> <textarea name="payment_plationline_description_{{ language.language_id }}" cols="80" rows="3" id="input-description-{{ language.language_id }}" class="form-control">{{ payment_plationline_description[language.language_id] ? payment_plationline_description[language.language_id] : entry_description_default }}</textarea>
+                                    </div>
+                                    <div id="error-description-{{ language.language_id }}" class="invalid-feedback"></div>
+                                </div>
+                            </div>
+                        {% endfor %}
+
+                        <div class="row mb-3">
+                            <label for="payment_plationline_show_logos"
+                                   class="col-sm-2 col-form-label">{{ entry_show_logos }}</label>
+                            <div class="col-sm-10">
+                                <div class="form-check form-switch form-switch-lg">
+                                    <input
+                                            type="checkbox" name="payment_plationline_show_logos" value="1"
+                                            id="payment_plationline_show_logos"
+                                            class="form-check-input"{% if payment_plationline_show_logos == 1 or payment_plationline_show_logos|length %} checked{% endif %}/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="payment_plationline_f_login_ron"
+                                   class="col-sm-2 col-form-label">{{ entry_f_login_ron }}</label>
+                            <div class="col-sm-10">
+                                <input type="text" id="payment_plationline_f_login_ron" name="payment_plationline_f_login_ron"
+                                       value="{{ payment_plationline_f_login_ron }}" class="form-control"/>
+                                <div id="error-f-login-ron" class="invalid-feedback"></div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="payment_plationline_f_login_eur"
+                                   class="col-sm-2 col-form-label">{{ entry_f_login_eur }}</label>
+                            <div class="col-sm-10">
+                                <input type="text" id="payment_plationline_f_login_eur" name="payment_plationline_f_login_eur"
+                                       value="{{ payment_plationline_f_login_eur }}" class="form-control"/>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="payment_plationline_f_login_usd"
+                                   class="col-sm-2 col-form-label">{{ entry_f_login_usd }}</label>
+                            <div class="col-sm-10">
+                                <input type="text" id="payment_plationline_f_login_usd" name="payment_plationline_f_login_usd"
+                                       value="{{ payment_plationline_f_login_usd }}" class="form-control"/>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="payment_plationline_rsa_auth"
+                                   class="col-sm-2 col-form-label">{{ entry_rsa_auth }}</label>
+                            <div class="col-sm-10">
+                                <textarea id="payment_plationline_rsa_auth" name="payment_plationline_rsa_auth"
+                                          rows="10" class="form-control">{{ payment_plationline_rsa_auth }}</textarea>
+                                <div id="error-rsa-auth" class="invalid-feedback"></div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="payment_plationline_iv_auth"
+                                   class="col-sm-2 col-form-label">{{ entry_iv_auth }}</label>
+                            <div class="col-sm-10">
+                                <input type="text" id="payment_plationline_iv_auth" name="payment_plationline_iv_auth"
+                                       value="{{ payment_plationline_iv_auth }}" class="form-control"/>
+                                <div id="error-iv-auth" class="invalid-feedback"></div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="payment_plationline_rsa_itsn"
+                                   class="col-sm-2 col-form-label">{{ entry_rsa_itsn }}</label>
+                            <div class="col-sm-10">
+                                <textarea id="payment_plationline_rsa_itsn" name="payment_plationline_rsa_itsn"
+                                          rows="10" class="form-control">{{ payment_plationline_rsa_itsn }}</textarea>
+                                <div id="error-rsa-itsn" class="invalid-feedback"></div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="payment_plationline_iv_itsn"
+                                   class="col-sm-2 col-form-label">{{ entry_iv_itsn }}</label>
+                            <div class="col-sm-10">
+                                <input type="text" id="payment_plationline_iv_itsn" name="payment_plationline_iv_itsn"
+                                       value="{{ payment_plationline_iv_itsn }}" class="form-control"/>
+                                <div id="error-iv-itsn" class="invalid-feedback"></div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="payment_plationline_relay_method"
+                                   class="col-sm-2 col-form-label">{{ entry_relay_method }}</label>
+                            <div class="col-sm-10">
+                                <select name="payment_plationline_relay_method" class="form-control">
+                                    <option value="POST_S2S_PO_PAGE" {% if payment_plationline_relay_method == 'POST_S2S_PO_PAGE' %} selected{% endif %}>
+                                        POST_S2S_PO_PAGE
+                                    </option>
+                                    <option value="PTOR" {% if payment_plationline_relay_method == 'PTOR' %} selected{% endif %}>
+                                        PTOR
+                                    </option>
+                                    <option value="POST_S2S_MT_PAGE" {% if payment_plationline_relay_method == 'POST_S2S_MT_PAGE' %} selected{% endif %}>
+                                        POST_S2S_MT_PAGE
+                                    </option>
+                                    <option value="SOAP_PO_PAGE" {% if payment_plationline_relay_method == 'SOAP_PO_PAGE' %} selected{% endif %}>
+                                        SOAP_PO_PAGE
+                                    </option>
+                                    <option value="SOAP_MT_PAGE" {% if payment_plationline_relay_method == 'SOAP_MT_PAGE' %} selected{% endif %}>
+                                        SOAP_MT_PAGE
+                                    </option>
+                                </select>
+                                <div class="margin-form" style="color: #900; float:none; vertical-align: middle;">
+                                    <b>INFO:</b> Site-ul Dvs. {{ is_secure?'<b>ARE</b>':'<b>NU ARE</b>' }} certificat
+                                    SSL
+                                    activ, din acest motiv va recomandam sa selectati metoda de raspuns
+                                    <b>{{ is_secure?'PTOR':'POST_S2S_PO_PAGE' }}</b>. {{ is_secure?'Clientul VA FI redirectionat catre site-ul Dvs. dupa finalizarea platii, iar starea comenzii se va actualiza in magazinul online.':'Clientului i se va afisa pagina de raspuns PlatiOnline, iar starea comenzii se va actualiza in site-ul Dvs' }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="payment_plationline_itsn_method"
+                                   class="col-sm-2 col-form-label">{{ entry_relay_method }}</label>
+                            <div class="col-sm-10">
+                                <select name="payment_plationline_itsn_method" class="form-control">
+                                    <option value="POST" {% if payment_plationline_itsn_method == 'POST' %} selected{% endif %}>
+                                        POST
+                                    </option>
+                                </select>
+                                <div class="margin-form" style="color: #900; float:none; vertical-align: middle;">
+                                    <b>INFO:</b> Pentru a seta URL-ul ITSN accesati <a
+                                            href="https://merchants.plationline.ro" target="_blank"><b>https://merchants.plationline.ro</b></a>,
+                                    sectiunea <b>Settings</b>, tab-ul <b>Instant status notification</b>. Completati
+                                    adresa
+                                    <b> {{ constant('HTTP_CATALOG') }}index.php?route=extension/plationline/payment/plationline.itsn</b>
+                                    si selectati metoda <b>POST</b>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="payment_plationline_test"
+                                   class="col-sm-2 col-form-label">{{ entry_test }}</label>
+                            <div class="col-sm-10">
+                                <input type="radio" name="payment_plationline_test" value="1"
+                                        {% if payment_plationline_test == 1 or payment_plationline_test|length %} checked {% endif %}
+                                       class="form-check-input"/>
+                                {{ text_yes }}
+                                <input type="radio" name="payment_plationline_test" value="0"
+                                        {% if payment_plationline_test == 0 %} checked {% endif %}
+                                       class="form-check-input"/>
+                                {{ text_no }}
+                            </div>
+
+                        </div>
+
+                        {% for key, status in po_order_statuses %}
+                            <div class="row mb-3">
+                                <label for="{{ key }}"
+                                       class="col-sm-2 col-form-label">{{ status.name }}</label>
+                                <div class="col-sm-10">
+                                    <select name="{{ key }}" class="form-control">
+                                        {% for order_status in order_statuses %}
+                                            {% if (status.value is not empty and order_status.order_status_id == status.value) or (status.value is empty and order_status.name == status.name) %}
+                                                <option value="{{ order_status.order_status_id }}"
+                                                        selected="selected">{{ order_status.name }}</option>
+                                            {% else %}
+                                                <option value="{{ order_status.order_status_id }}">{{ order_status.name }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        {% endfor %}
+
+                        <div class="row mb-3">
+                            <label for="payment_plationline_geo_zone_id"
+                                   class="col-sm-2 col-form-label">{{ entry_geo_zone }}</label>
+                            <div class="col-sm-10">
+                                <select name="payment_plationline_geo_zone_id" id="payment_plationline_geo_zone_id"
+                                        class="form-select">
+                                    <option value="0">{{ text_all_zones }}</option>
+                                    {% for geo_zone in geo_zones %}
+                                        <option value="{{ geo_zone.geo_zone_id }}"{% if geo_zone.geo_zone_id == payment_credit_card_geo_zone_id %} selected{% endif %}>{{ geo_zone.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="payment_plationline_status"
+                                   class="col-sm-2 col-form-label">{{ entry_status }}</label>
+                            <div class="col-sm-10">
+                                <div class="form-check form-switch form-switch-lg">
+                                    <input
+                                            type="checkbox" name="payment_plationline_status" value="1"
+                                            id="payment_plationline_status"
+                                            class="form-check-input"{% if payment_plationline_status == 1 or payment_plationline_status|length %} checked{% endif %}/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <label for="payment_plationline_sort_order"
+                                   class="col-sm-2 col-form-label">{{ entry_sort_order }}</label>
+                            <div class="col-sm-10">
+                                <input type="text" name="payment_plationline_sort_order"
+                                       value="{{ payment_plationline_sort_order ?: 0 }}"
+                                       placeholder="{{ payment_plationline_sort_order }}"
+                                       id="payment_plationline_sort_order" class="form-control"/>
+                            </div>
+                        </div>
+                    </fieldset>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{{ footer }}
