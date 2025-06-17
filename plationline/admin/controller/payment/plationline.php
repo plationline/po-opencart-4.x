@@ -26,7 +26,7 @@ class PlatiOnline extends \Opencart\System\Engine\Controller
             'href' => $this->url->link('extension/plationline/payment/plationline', 'user_token=' . $this->session->data['user_token'])
         ];
 
-        $data['save'] = $this->url->link('extension/plationline/payment/plationline.save', 'user_token=' . $this->session->data['user_token']);
+        $data['save'] = $this->url->link('extension/plationline/payment/plationline|save', 'user_token=' . $this->session->data['user_token']);
         $data['back'] = $this->url->link('marketplace/extension', 'user_token=' . $this->session->data['user_token'] . '&type=payment');
 
         $data['payment_plationline_f_login_ron'] = $this->config->get('payment_plationline_f_login_ron');

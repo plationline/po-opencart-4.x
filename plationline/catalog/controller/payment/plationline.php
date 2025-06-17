@@ -669,7 +669,7 @@ class PlatiOnline extends \Opencart\System\Engine\Controller
         }
 
         $transaction_relay_response = [];
-        $transaction_relay_response['f_relay_response_url'] = $this->url->link('extension/plationline/payment/plationline.callback', 'language=' . $this->config->get('config_language'));
+        $transaction_relay_response['f_relay_response_url'] = $this->url->link('extension/plationline/payment/plationline|callback', 'language=' . $this->config->get('config_language'));
         $transaction_relay_response['f_relay_method'] = $this->config->get('payment_plationline_relay_method');
         $transaction_relay_response['f_post_declined'] = 1;
         $transaction_relay_response['f_relay_handshake'] = 1;
