@@ -5,7 +5,7 @@
             <i class="fa-solid fa-clipboard-check"></i> {{ heading_title }}
         </div>
         <div class="card-body">
-            {% if plationline_payment %}
+            {% if plationline_payment and transaction_id %}
                 <div class="row">
                     <div class="col-12 col-md-6">
                         <button type="button" class="btn btn-primary" data-order="{{ order_id }}" id="query-po">

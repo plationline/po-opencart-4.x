@@ -17,6 +17,8 @@ class AddAdminFunctionality extends Controller
 
             $data['po_total'] = number_format($order_info['total'], 2, '.', '');
 
+            $data['transaction_id'] = $order_info['transaction_id'];
+
             $new_tab_definition = [
                 'code' => 'plationline', // Unique ID for your new tab
                 'title' => $this->language->get('heading_title'), // Title from your language file
