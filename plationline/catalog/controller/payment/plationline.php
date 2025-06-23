@@ -2,6 +2,7 @@
 
 namespace Opencart\Catalog\Controller\Extension\PlatiOnline\Payment;
 
+use Opencart\System\Library\Extension\PlatiOnline\PO5;
 use function array_multisort;
 use function html_entity_decode;
 use function json_encode;
@@ -30,7 +31,7 @@ class PlatiOnline extends \Opencart\System\Engine\Controller
         $this->load->language('extension/plationline/payment/plationline');
 
         include_once(DIR_EXTENSION . 'plationline/system/library/PO5.php');
-        $po = new \Opencart\System\Library\Extension\PlatiOnline\PO5();
+        $po = new PO5();
         $po->setRSAKeyDecrypt($this->config->get("payment_plationline_rsa_itsn"));
         $po->setIVITSN($this->config->get("payment_plationline_iv_itsn"));
 
@@ -424,7 +425,7 @@ class PlatiOnline extends \Opencart\System\Engine\Controller
     {
         $this->load->language('extension/plationline/payment/plationline');
         include_once(DIR_EXTENSION . 'plationline/system/library/PO5.php');
-        $po = new \Opencart\System\Library\Extension\PlatiOnline\PO5();
+        $po = new PO5();
 
         $po->setRSAKeyDecrypt($this->config->get("payment_plationline_rsa_itsn"));
         $po->setIVITSN($this->config->get("payment_plationline_iv_itsn"));
@@ -775,7 +776,7 @@ class PlatiOnline extends \Opencart\System\Engine\Controller
         $f_request['f_order_string'] = 'Comanda nr. ' . $this->session->data['order_id'] . ' pe ' . $this->config->get("config_url");
 
         include_once(DIR_EXTENSION . 'plationline/system/library/PO5.php');
-        $po = new \Opencart\System\Library\Extension\PlatiOnline\PO5();
+        $po = new PO5();
 
         $po->f_login = $this->config->get("payment_plationline_f_login_" . strtolower($f_request['f_currency']));
         $f_request['f_website'] = str_replace('www.', '', $_SERVER['SERVER_NAME']);
@@ -787,6 +788,7 @@ class PlatiOnline extends \Opencart\System\Engine\Controller
             $auth = $po->auth($f_request, 2);
             $this->model_checkout_order->addHistory($this->session->data['order_id'], $this->config->get('payment_plationline_order_status_pending'));
             $response = ['redirect' => $auth['redirect_url']];
+            $this->model_checkout_order->editTransactionId($this->session->data['order_id'], $auth['transaction_id']);
             $this->cart->clear();
         } catch (\Exception $e) {
             $response = ['error' => $e->getMessage(), 'redirect' => $this->url->link('checkout/failure', 'language=' . $this->config->get('config_language'), true)];

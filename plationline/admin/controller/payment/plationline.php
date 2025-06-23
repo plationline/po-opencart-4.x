@@ -1,6 +1,9 @@
 <?php
 
 namespace Opencart\Admin\Controller\Extension\PlatiOnline\Payment;
+
+use Opencart\System\Library\Extension\PlatiOnline\PO5;
+
 class PlatiOnline extends \Opencart\System\Engine\Controller
 {
     public function index(): void
@@ -8,7 +11,16 @@ class PlatiOnline extends \Opencart\System\Engine\Controller
         $this->load->language('extension/plationline/payment/plationline');
         $this->document->setTitle($this->language->get('heading_title') . ' - ' . $this->language->get('text_PO_version'));
         $this->load->model('setting/setting');
-
+        $this->load->model('setting/event');
+        $event_data = [
+            'code' => 'plationline_add_admin_functionality_after_order_history', // Unique identifier for your event
+            'description' => 'Adds custom admin functionality for transaction remote actions',
+            'trigger' => 'admin/view/sale/order_info', // The event to hook into
+            'action' => 'extension/plationline/event/add_admin_functionality.afterOrderHistory', // Your event handler method
+            'status' => true, // Enable the event
+            'sort_order' => 1 // Order in which events are executed for the same trigger
+        ];
+        $this->model_setting_event->addEvent($event_data);
         $data['breadcrumbs'] = [];
 
         $data['breadcrumbs'][] = [
@@ -166,6 +178,7 @@ class PlatiOnline extends \Opencart\System\Engine\Controller
     public function install(): void
     {
         $this->createOrderStatuses();
+        $this->addEvents();
     }
 
     private function get_all_po_statuses(): array
@@ -226,5 +239,227 @@ class PlatiOnline extends \Opencart\System\Engine\Controller
                 $this->model_localisation_order_status->addOrderStatus($order_status_data);
             }
         }
+    }
+
+    private function addEvents()
+    {
+        $this->load->model('setting/event');
+        $event_data = [
+            'code' => 'plationline_add_admin_functionality_after_order_history', // Unique identifier for your event
+            'description' => 'Adds custom admin functionality for transaction remote actions',
+            'trigger' => 'admin/view/sale/order_info', // The event to hook into
+            'action' => 'extension/plationline/event/add_admin_functionality.afterOrderHistory', // Your event handler method
+            'status' => true, // Enable the event
+            'sort_order' => 1 // Order in which events are executed for the same trigger
+        ];
+        $this->model_setting_event->addEvent($event_data);
+    }
+
+    public function uninstall(): void
+    {
+        $this->load->model('setting/event');
+        $this->model_setting_event->deleteEventByCode('plationline_add_admin_functionality_after_order_history');
+    }
+
+    public function query()
+    {
+        include_once(DIR_EXTENSION . 'plationline/system/library/PO5.php');
+        $po = new PO5();
+
+        $this->load->model('sale/order');
+        $this->load->model('localisation/order_status');
+        $this->load->language('extension/plationline/payment/plationline');
+
+        $order_info = $this->model_sale_order->getOrder((int)$this->request->post('order_id'));
+
+        $po->f_login = $this->config->get("payment_plationline_f_login_" . strtolower($order_info['currency_code']));
+        $po->setRSAKeyEncrypt($this->config->get("payment_plationline_rsa_auth"));
+        $po->setIV($this->config->get("payment_plationline_iv_auth"));
+
+        $f_request['f_website'] = str_replace('www.', '', $_SERVER['SERVER_NAME']);
+        $f_request['f_order_number'] = $order_info['order_id'];
+        $f_request['x_trans_id'] = $order_info['transaction_id']; // transaction ID
+
+        $response_query = $po->query($f_request, 0);
+
+        if ($po->get_xml_tag_content($response_query, 'PO_ERROR_CODE') == 1) {
+            echo $po->get_xml_tag_content($response_query, 'PO_ERROR_REASON');
+        } else {
+            $o = $po->get_xml_tag($response_query, 'ORDER');
+            $tranzaction = $po->get_xml_tag($o, 'TRANZACTION');
+            $starefin1 = $po->get_xml_tag_content($po->get_xml_tag($tranzaction, 'STATUS_FIN1'), 'CODE');
+            $starefin2 = $po->get_xml_tag_content($po->get_xml_tag($tranzaction, 'STATUS_FIN2'), 'CODE');
+
+            switch ($starefin1) {
+                case '13':
+                    $order_status_id = $this->config->get('payment_plationline_order_status_on_hold');
+                    break;
+                case '2':
+                    $order_status_id = $this->config->get('payment_plationline_order_status_approved');
+                    break;
+                case '8':
+                    $order_status_id = $this->config->get('payment_plationline_order_status_decline');
+                    break;
+                case '3':
+                    $order_status_id = $this->config->get('payment_plationline_order_status_pending_settled');
+                    break;
+                case '5':
+                    //$starefin = 'Incasata';
+                    /* Verify X_STARE_FIN2 status*/
+                    switch ($starefin2) {
+                        case '1':
+                            $order_status_id = $this->config->get('payment_plationline_order_status_pending_credited');
+                            break;
+                        case '2':
+                            $order_status_id = $this->config->get('payment_plationline_order_status_credited');
+                            break;
+                        case '3':
+                            $order_status_id = $this->config->get('payment_plationline_order_status_cbk');
+                            break;
+                        case '4':
+                            $order_status_id = $this->config->get('payment_plationline_order_status_settled');
+                            break;
+                    }
+                    break;
+                case '6':
+                    $order_status_id = $this->config->get('payment_plationline_order_status_pending_voided');
+                    break;
+                case '7':
+                    $order_status_id = $this->config->get('payment_plationline_order_status_voided');
+                    break;
+                case '9':
+                    $order_status_id = $this->config->get('payment_plationline_order_status_expired');
+                    break;
+                case '10':
+                case '16':
+                case '17':
+                    $order_status_id = $this->config->get('payment_plationline_order_status_error');
+                    break;
+                case '1':
+                    $order_status_id = $this->config->get('payment_plationline_order_status_pending');
+                    break;
+                default:
+                    $order_status_id = -1;
+            }
+
+            $order_status_info = $this->model_localisation_order_status->getOrderStatus($order_status_id);
+
+            echo $this->language->get('text_order_status_query') . $order_status_info['name'];
+        }
+        die();
+    }
+
+    public function void()
+    {
+        include_once(DIR_EXTENSION . 'plationline/system/library/PO5.php');
+        $po = new PO5();
+
+        $this->load->model('sale/order');
+        $this->load->model('localisation/order_status');
+        $this->load->language('extension/plationline/payment/plationline');
+
+        $order_info = $this->model_sale_order->getOrder((int)$this->request->post('order_id'));
+
+        $po->f_login = $this->config->get("payment_plationline_f_login_" . strtolower($order_info['currency_code']));
+        $po->setRSAKeyEncrypt($this->config->get("payment_plationline_rsa_auth"));
+        $po->setIV($this->config->get("payment_plationline_iv_auth"));
+
+        $f_request['f_website'] = str_replace('www.', '', $_SERVER['SERVER_NAME']);
+        $f_request['f_order_number'] = $order_info['order_id'];
+        $f_request['x_trans_id'] = $order_info['transaction_id']; // transaction ID
+
+        $response_void = $po->void($f_request, 7);
+
+        if ($po->get_xml_tag_content($response_void, 'PO_ERROR_CODE') == 1) {
+            $message = $po->get_xml_tag_content($response_void, 'PO_ERROR_REASON');
+        } else {
+            switch ($po->get_xml_tag_content($response_void, 'X_RESPONSE_CODE')) {
+                case '7':
+                    $message = 'Successfully requested <b>VOID</b> for Plationline Transaction ID: <b>' . $order_info['transaction_id'] . '</b>';
+                    break;
+                case '10':
+                    $message = 'Requested <b>VOID</b> for Plationline Transaction ID: <b>' . $order_info['transaction_id'] . '</b> but got error <b>10</b>';
+                    break;
+            }
+        }
+        echo $message;
+        die();
+    }
+
+    public function settle()
+    {
+        include_once(DIR_EXTENSION . 'plationline/system/library/PO5.php');
+        $po = new PO5();
+
+        $this->load->model('sale/order');
+        $this->load->model('localisation/order_status');
+        $this->load->language('extension/plationline/payment/plationline');
+
+        $order_info = $this->model_sale_order->getOrder((int)$this->request->post('order_id'));
+
+        $po->f_login = $this->config->get("payment_plationline_f_login_" . strtolower($order_info['currency_code']));
+        $po->setRSAKeyEncrypt($this->config->get("payment_plationline_rsa_auth"));
+        $po->setIV($this->config->get("payment_plationline_iv_auth"));
+
+        $f_request['f_website'] = str_replace('www.', '', $_SERVER['SERVER_NAME']);
+        $f_request['f_order_number'] = $order_info['order_id'];
+        $f_request['x_trans_id'] = $order_info['transaction_id'];
+        $f_request['f_shipping_company'] = '-';
+        $f_request['f_awb'] = '-';
+
+        $response_settle = $po->settle($f_request, 3);
+
+        if ($po->get_xml_tag_content($response_settle, 'PO_ERROR_CODE') == 1) {
+            $message = $po->get_xml_tag_content($response_settle, 'PO_ERROR_REASON');
+        } else {
+            switch ($po->get_xml_tag_content($response_settle, 'X_RESPONSE_CODE')) {
+                case '3':
+                    $message = 'Successfully requested <b>SETTLE</b> for Plationline Transaction ID: <b>' . $order_info['transaction_id'] . '</b>';
+                    break;
+                case '10':
+                    $message = 'Requested <b>SETTLE</b> for Plationline Transaction ID: <b>' . $order_info['transaction_id'] . '</b> but got error <b>10</b>';
+                    break;
+            }
+        }
+        echo $message;
+        die();
+    }
+
+    public function refund()
+    {
+        include_once(DIR_EXTENSION . 'plationline/system/library/PO5.php');
+        $po = new PO5();
+
+        $this->load->model('sale/order');
+        $this->load->model('localisation/order_status');
+        $this->load->language('extension/plationline/payment/plationline');
+
+        $order_info = $this->model_sale_order->getOrder((int)$this->request->post('order_id'));
+
+        $po->f_login = $this->config->get("payment_plationline_f_login_" . strtolower($order_info['currency_code']));
+        $po->setRSAKeyEncrypt($this->config->get("payment_plationline_rsa_auth"));
+        $po->setIV($this->config->get("payment_plationline_iv_auth"));
+
+        $f_request['f_website'] = str_replace('www.', '', $_SERVER['SERVER_NAME']);
+        $f_request['f_order_number'] = $order_info['order_id'];
+        $f_request['x_trans_id'] = $order_info['transaction_id'];
+        $f_request['f_amount'] = (float)$this->request->post('amount');
+
+        $response_refund = $po->refund($f_request, 1);
+
+        if ($po->get_xml_tag_content($response_refund, 'PO_ERROR_CODE') == 1) {
+            $message = $po->get_xml_tag_content($response_refund, 'PO_ERROR_REASON');
+        } else {
+            switch ($po->get_xml_tag_content($response_refund, 'X_RESPONSE_CODE')) {
+                case '1':
+                    $message = 'Successfully requested <b>REFUND</b> for Plationline Transaction ID: <b>' . $order_info['transaction_id'] . '</b>';
+                    break;
+                case '10':
+                    $message = 'Requested <b>REFUND</b> for Plationline Transaction ID: <b>' . $order_info['transaction_id'] . '</b> but got error <b>10</b>';
+                    break;
+            }
+        }
+        echo $message;
+        die();
     }
 }

@@ -1,0 +1,223 @@
+{# The ID of this div MUST match the 'id' you set in $new_tab_definition in your event handler #}
+<div id="tab-order-audit" class="tab-pane">
+    <div class="card">
+        <div class="card-header">
+            <i class="fa-solid fa-clipboard-check"></i> {{ heading_title }}
+        </div>
+        <div class="card-body">
+            {% if plationline_payment %}
+                <div class="row">
+                    <div class="col-12 col-md-6">
+                        <button type="button" class="btn btn-primary" data-order="{{ order_id }}" id="query-po">
+                            {{ text_query_transaction }}
+                        </button>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <p class="text-muted">{{ text_query_transaction_description }} </p>
+                    </div>
+                </div>
+                <hr/>
+                <div class="row">
+                    <div class="col-12 col-md-6">
+                        <button type="button" class="btn btn-primary" data-order="{{ order_id }}" id="void-po">
+                            {{ text_void_transaction }}
+                        </button>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <p class="text-muted"> {{ text_query_transaction_description }} </p>
+                    </div>
+                </div>
+                <hr/>
+                <div class="row">
+                    <div class="col-12 col-md-6">
+                        <button type="button" class="btn btn-primary" data-order="{{ order_id }}" id="settle-po">
+                            {{ text_settle_transaction }}
+                        </button>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <p class="text-muted"> {{ text_settle_transaction_description }} </p>
+                    </div>
+                </div>
+                <hr/>
+                <div class="row">
+                    <div class="col-12 col-md-6">
+                        <div class="input-group">
+                            <input value="{{ po_total }}" class="form-control flex-grow-0 w-auto" id="refund-po-amount"
+                                   type="number" step="0.01" min="0.01"
+                                   max="{{ po_total }}">
+                            <span class="input-group-text" id="basic-addon2">{{ currency_code }}</span>
+                            <button type="button" class="btn btn-primary" data-order="{{ order_id }}" id="refund-po">
+                                {{ text_refund_transaction }}
+                            </button>
+                        </div>
+
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <p class="text-muted"> {{ text_refund_transaction_description }} </p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('#query-po').on("click", function (e) {
+            e.preventDefault();
+            $.ajax({
+                type: "post",
+                url: "index.php?route=extension/plationline/payment/plationline.query&user_token={{ user_token }}",
+                data: {
+                    'order_id': $(this).data('order')
+                },
+                error: function (tXMLHttpRequest, textStatus, errorThrown) {
+                    alert('XMLHttpRequest.status: ' + tXMLHttpRequest.status
+                        + '\n textStatus: ' + textStatus
+                        + '\n errorThrown: ' + errorThrown
+                    );
+                    // Verifica daca este eroare de DB
+                    if (textStatus.search(/Warning/i) < 0 && textStatus.search(/Error/i) < 0) {
+                        alert('Eroare: ' + tXMLHttpRequest.status);
+                    }
+                },
+                success: function (mesaj) {
+                    alert(mesaj);
+                }
+            });
+        });
+
+        $('#void-po').on("click", function (e) {
+            e.preventDefault();
+            $.ajax({
+                type: "post",
+                url: "index.php?route=extension/plationline/payment/plationline.void&user_token={{ user_token }}",
+                data: {
+                    'order_id': $(this).data('order')
+                },
+                error: function (tXMLHttpRequest, textStatus, errorThrown) {
+                    alert('XMLHttpRequest.status: ' + tXMLHttpRequest.status
+                        + '\n textStatus: ' + textStatus
+                        + '\n errorThrown: ' + errorThrown
+                    );
+                    // Verifica daca este eroare de DB
+                    if (textStatus.search(/Warning/i) < 0 && textStatus.search(/Error/i) < 0) {
+                        alert('Eroare: ' + tXMLHttpRequest.status);
+                    }
+                },
+                success: function (mesaj) {
+                    $.ajax({
+                        url: 'index.php?route=sale/order.call&user_token={{ user_token }}&call=history_add&order_id={{ order_id }}',
+                        type: 'post',
+                        dataType: 'json',
+                        data: {
+                            'order_id': '{{ order_id }}',
+                            'comment': mesaj,
+                            'order_status_id': '{{ order_status_id }}',
+                        },
+                        contentType: 'application/x-www-form-urlencoded',
+                        beforeSend: function() {
+                        },
+                        complete: function() {
+                        },
+                        success: function(json) {
+                        },
+                        error: function(xhr, ajaxOptions, thrownError) {
+                            console.log(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+                        }
+                    });
+                    alert(mesaj);
+                }
+            });
+        });
+
+        $('#settle-po').on("click", function (e) {
+            e.preventDefault();
+            $.ajax({
+                type: "post",
+                url: "index.php?route=extension/plationline/payment/plationline.settle&user_token={{ user_token }}",
+                data: {
+                    'order_id': $(this).data('order')
+                },
+                error: function (tXMLHttpRequest, textStatus, errorThrown) {
+                    alert('XMLHttpRequest.status: ' + tXMLHttpRequest.status
+                        + '\n textStatus: ' + textStatus
+                        + '\n errorThrown: ' + errorThrown
+                    );
+                    // Verifica daca este eroare de DB
+                    if (textStatus.search(/Warning/i) < 0 && textStatus.search(/Error/i) < 0) {
+                        alert('Eroare: ' + tXMLHttpRequest.status);
+                    }
+                },
+                success: function (mesaj) {
+                    $.ajax({
+                        url: 'index.php?route=sale/order.call&user_token={{ user_token }}&call=history_add&order_id={{ order_id }}',
+                        type: 'post',
+                        dataType: 'json',
+                        data: {
+                            'order_id': '{{ order_id }}',
+                            'comment': mesaj,
+                            'order_status_id': '{{ order_status_id }}',
+                        },
+                        contentType: 'application/x-www-form-urlencoded',
+                        beforeSend: function() {
+                        },
+                        complete: function() {
+                        },
+                        success: function(json) {
+                        },
+                        error: function(xhr, ajaxOptions, thrownError) {
+                            console.log(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+                        }
+                    });
+                    alert(mesaj);
+                }
+            });
+        });
+
+        $('#refund-po').on("click", function (e) {
+            e.preventDefault();
+            $.ajax({
+                type: "post",
+                url: "index.php?route=extension/plationline/payment/plationline.refund&user_token={{ user_token }}",
+                data: {
+                    'order_id': $(this).data('order'),
+                    'amount': $('#refund-po-amount').val()
+                },
+                error: function (tXMLHttpRequest, textStatus, errorThrown) {
+                    alert('XMLHttpRequest.status: ' + tXMLHttpRequest.status
+                        + '\n textStatus: ' + textStatus
+                        + '\n errorThrown: ' + errorThrown
+                    );
+                    // Verifica daca este eroare de DB
+                    if (textStatus.search(/Warning/i) < 0 && textStatus.search(/Error/i) < 0) {
+                        alert('Eroare: ' + tXMLHttpRequest.status);
+                    }
+                },
+                success: function (mesaj) {
+                    $.ajax({
+                        url: 'index.php?route=sale/order.call&user_token={{ user_token }}&call=history_add&order_id={{ order_id }}',
+                        type: 'post',
+                        dataType: 'json',
+                        data: {
+                            'order_id': '{{ order_id }}',
+                            'comment': mesaj,
+                            'order_status_id': '{{ order_status_id }}',
+                        },
+                        contentType: 'application/x-www-form-urlencoded',
+                        beforeSend: function() {
+                        },
+                        complete: function() {
+                        },
+                        success: function(json) {
+                        },
+                        error: function(xhr, ajaxOptions, thrownError) {
+                            console.log(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+                        }
+                    });
+                    alert(mesaj);
+                }
+            });
+        });
+    });
+</script>
