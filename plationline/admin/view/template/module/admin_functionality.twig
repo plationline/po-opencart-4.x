@@ -2,7 +2,7 @@
 <div id="tab-order-audit" class="tab-pane">
     <div class="card">
         <div class="card-header">
-            <i class="fa-solid fa-clipboard-check"></i> {{ heading_title }}
+            <i class="fa-solid fa-clipboard-check"></i> {{ heading_title }} ID: <b>{{ transaction_id }}</b>
         </div>
         <div class="card-body">
             {% if plationline_payment and transaction_id %}
@@ -116,13 +116,13 @@
                             'order_status_id': '{{ order_status_id }}',
                         },
                         contentType: 'application/x-www-form-urlencoded',
-                        beforeSend: function() {
+                        beforeSend: function () {
                         },
-                        complete: function() {
+                        complete: function () {
                         },
-                        success: function(json) {
+                        success: function (json) {
                         },
-                        error: function(xhr, ajaxOptions, thrownError) {
+                        error: function (xhr, ajaxOptions, thrownError) {
                             console.log(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
                         }
                     });
@@ -160,13 +160,13 @@
                             'order_status_id': '{{ order_status_id }}',
                         },
                         contentType: 'application/x-www-form-urlencoded',
-                        beforeSend: function() {
+                        beforeSend: function () {
                         },
-                        complete: function() {
+                        complete: function () {
                         },
-                        success: function(json) {
+                        success: function (json) {
                         },
-                        error: function(xhr, ajaxOptions, thrownError) {
+                        error: function (xhr, ajaxOptions, thrownError) {
                             console.log(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
                         }
                     });
@@ -205,13 +205,13 @@
                             'order_status_id': '{{ order_status_id }}',
                         },
                         contentType: 'application/x-www-form-urlencoded',
-                        beforeSend: function() {
+                        beforeSend: function () {
                         },
-                        complete: function() {
+                        complete: function () {
                         },
-                        success: function(json) {
+                        success: function (json) {
                         },
-                        error: function(xhr, ajaxOptions, thrownError) {
+                        error: function (xhr, ajaxOptions, thrownError) {
                             console.log(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
                         }
                     });
