@@ -11,16 +11,7 @@ class PlatiOnline extends \Opencart\System\Engine\Controller
         $this->load->language('extension/plationline/payment/plationline');
         $this->document->setTitle($this->language->get('heading_title') . ' - ' . $this->language->get('text_PO_version'));
         $this->load->model('setting/setting');
-        $this->load->model('setting/event');
-        $event_data = [
-            'code' => 'plationline_add_admin_functionality_after_order_history', // Unique identifier for your event
-            'description' => 'Adds custom admin functionality for transaction remote actions',
-            'trigger' => 'admin/view/sale/order_info', // The event to hook into
-            'action' => 'extension/plationline/event/add_admin_functionality.afterOrderHistory', // Your event handler method
-            'status' => true, // Enable the event
-            'sort_order' => 1 // Order in which events are executed for the same trigger
-        ];
-        $this->model_setting_event->addEvent($event_data);
+
         $data['breadcrumbs'] = [];
 
         $data['breadcrumbs'][] = [
